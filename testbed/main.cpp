@@ -72,6 +72,7 @@ Matrix identity() {
 
 	return result;
 }
+
 // матрица проекции из 3D в 2D
 // по умолчанию такая была
 Matrix projection(const float aspect_ratio) {
@@ -127,6 +128,7 @@ Matrix multiply(const Matrix &a, const Matrix &b) {
 
 	return result;
 }
+
 /* поворот матриц
  * сначала поворот вокруг одной оси, потом вокруг другой
  * перемножение матриц поворота - матрица поворота вокруг 2х осей

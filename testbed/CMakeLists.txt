@@ -1,42 +1,37 @@
-cmake_minimum_required(VERSION 3.20)
-include(FetchContent)
+function(add_shaders TARGET_NAME)
+    set(SHADER_SOURCE_FILES ${ARGN})
 
-project(testbed LANGUAGES C CXX)
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/shaders)
 
-add_executable(${PROJECT_NAME} main.cpp)
+    set(SHADER_PRODUCTS)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD_REQUIRED TRUE CXX_STANDARD 20)
+    foreach (SHADER_SOURCE IN LISTS SHADER_SOURCE_FILES)
+        cmake_path(ABSOLUTE_PATH SHADER_SOURCE NORMALIZE)
+        cmake_path(GET SHADER_SOURCE FILENAME SHADER_NAME)
 
-find_package(Vulkan REQUIRED)
+        add_custom_command(
+                OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/shaders/${SHADER_NAME}.spv
+                COMMAND Vulkan::glslc
+                ${SHADER_SOURCE}
+                -I ${CMAKE_CURRENT_SOURCE_DIR}/shaders
+                -o ${CMAKE_CURRENT_BINARY_DIR}/shaders/${SHADER_NAME}.spv
+                DEPENDS ${SHADER_SOURCE}
+                COMMENT "Compiling shader: ${SHADER_NAME}"
+                VERBATIM
+        )
 
-target_link_libraries(${PROJECT_NAME} veekay Vulkan::Headers)
+        list(APPEND SHADER_PRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/shaders/${SHADER_NAME}.spv)
+    endforeach ()
 
-# Compile shaders
-find_program(GLSLC_FOUND glslc)
-if(GLSLC_FOUND)
-	set(_SHADER_BINARIES)
+    add_custom_target(${TARGET_NAME} ALL
+            DEPENDS ${SHADER_PRODUCTS}
+            COMMENT "Building shader target: ${TARGET_NAME}"
+    )
+endfunction()
 
-	macro(compile_shader SHADER_FILE)
-		set(SHADER_SOURCE ${CMAKE_SOURCE_DIR}/shaders/${SHADER_FILE})
-		set(SHADER_BINARY ${SHADER_FILE}.spv)
-		set(SHADER_BINARY_PATH ${CMAKE_SOURCE_DIR}/shaders/${SHADER_BINARY})
+add_shaders(shaders_target
+        ${CMAKE_SOURCE_DIR}/shaders/shader.vert
+        ${CMAKE_SOURCE_DIR}/shaders/shader.frag
+)
 
-		add_custom_command(
-			OUTPUT ${SHADER_BINARY_PATH}
-			COMMAND glslc ${SHADER_SOURCE} -o ${SHADER_BINARY_PATH}
-			DEPENDS ${SHADER_SOURCE}
-			COMMENT "Compiling ${SHADER_FILE} shader"
-		)
-
-		list(APPEND _SHADER_BINARIES ${SHADER_BINARY_PATH})
-	endmacro()
-
-	# To compile shader file, use compile_shader function with a file name
-	# of a shader inside shaders directory. See example below
-
-	compile_shader(shader.vert)
-	compile_shader(shader.frag)
-
-	add_custom_target(shaders DEPENDS ${_SHADER_BINARIES})
-	add_dependencies(${PROJECT_NAME} shaders)
-endif()
+add_dependencies(${PROJECT_NAME} shaders_target)
