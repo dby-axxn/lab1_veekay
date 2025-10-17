@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "configurePresets": [
     {
       "name": "common",
@@ -9,7 +9,7 @@
       "cacheVariables": {
         "CMAKE_MAKE_PROGRAM": "mingw32-make.exe",
         "CMAKE_C_COMPILER": "gcc.exe",
-        "CMAKE_CXX_COMPILER": "c++.exe"
+        "CMAKE_CXX_COMPILER": "g++.exe"
       }
     },
     {
@@ -27,6 +27,18 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "inheritConfigureEnvironment": true
+    },
+    {
+      "name": "release",
+      "configurePreset": "release",
+      "inheritConfigureEnvironment": true
     }
   ]
 }
